@@ -7,8 +7,8 @@ import hashlib
 from PIL import Image
 
 
-API_PREDICT = "http://35.247.181.180/predict"
-API_CORRECT = "http://35.247.181.180/correct"
+API_PREDICT = "http://35.240.180.131/predict"
+API_CORRECT = "http://35.240.180.131/correct"
 
 image_dir = os.path.join("..", "image")
 
@@ -19,7 +19,7 @@ class TestAPI(unittest.TestCase):
     """
     def test_predictio(self):
         """
-        Test orientation prediction of different rotation
+        Test orientation prediction of different orientation (0, 90, 180, 270)
         """
         with open(os.path.join(image_dir, "test0.jpg"), "rb") as f:
             files = {"image": ("test0.jpg", f, "image/jpeg")}
