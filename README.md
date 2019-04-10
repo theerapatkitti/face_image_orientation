@@ -48,7 +48,7 @@ NOTE: curl command does not show content-type of bitmap image as image/bmp so ne
 curl -X POST -F image=@path/to/image "http://localhost:5000/predict"
 
 # Run on cloud
-curl -X POST -F image=@path/to/image "http://35.240.180.131/predict"
+curl -X POST -F image=@path/to/image "http://<external ip>/predict"
 ```
 
 Or by using python script.
@@ -61,7 +61,7 @@ files = {"image": ("filename", open("path/to/image", "rb"), "mimetype")}
 requests.post("http://localhost:5000/predict", files=files)
 
 # Run on cloud
-requests.post("http://35.240.180.131/predict", files=files)
+requests.post("http://<external ip>/predict", files=files)
 ```
 
 ### Orientation Correction
@@ -76,7 +76,7 @@ NOTE: curl command does not show content-type of bitmap image as image/bmp so ne
 curl -X POST -F image=@path/to/image "http://localhost:5000/correct"
 
 # Run on cloud
-curl -X POST -F image=@path/to/image "http://35.240.180.131/correct"
+curl -X POST -F image=@path/to/image "http://<external ip>/correct"
 ```
 
 Or by using python script.
@@ -89,7 +89,7 @@ files = {"image": ("filename", open("path/to/image", "rb"), "mimetype")}
 requests.post("http://localhost:5000/correct", files=files)
 
 # Run on cloud
-requests.post("http://35.240.180.131/correct", files=files)
+requests.post("http://<external ip>/correct", files=files)
 ```
 
 ## Testing

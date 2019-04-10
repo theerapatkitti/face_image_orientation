@@ -7,8 +7,8 @@ import hashlib
 from PIL import Image
 
 
-API_PREDICT = "http://35.240.180.131/predict"
-API_CORRECT = "http://35.240.180.131/correct"
+API_PREDICT = "http://<external ip>/predict"
+API_CORRECT = "http://<external ip>/correct"
 
 image_dir = os.path.join("..", "image")
 
