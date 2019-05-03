@@ -135,7 +135,7 @@ To deploy the API, a docker image is created.
 ```
 cd docker
 
-sudo docker build -t sertis-api:latest .
+sudo docker build -t ml-api:latest .
 ```
 
 Then the docker container is uploaded to Docker Hub for Kubernetes to install.
