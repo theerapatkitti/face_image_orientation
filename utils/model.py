@@ -102,11 +102,11 @@ class Model():
         if config.MODEL == "ResNet50":
             base_model = ResNet50(weights='imagenet', include_top=False, input_shape=config.INPUT_SHAPE)
             x = base_model.output
-            x = Flatten()(x)
-            final_output = Dense(config.NUM_CLASSES, activation='softmax', name='rotation')(x)
+            x = KL.Flatten()(x)
+            final_output = KL.Dense(config.NUM_CLASSES, activation='softmax', name='rotation')(x)
 
             # create the new model
-            model = Model(inputs=base_model.input, outputs=final_output)
+            model = KM.Model(inputs=base_model.input, outputs=final_output)
 
         else:
             model = KM.Sequential()
@@ -128,7 +128,7 @@ class Model():
             model.add(KL.Dropout(0.5))
             model.add(KL.Dense(512, activation='relu'))
             model.add(KL.Dense(config.NUM_CLASSES, activation='softmax', name='rotation'))
-
+        
         self.model = model
     
     def train(self, train_dataset, val_dataset, learning_rate, epochs,

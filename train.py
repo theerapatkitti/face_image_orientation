@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
         # *** This training schedule is an example. Update to your needs ***
 
-        # Training - Stage 1
+        # Training
         print("Training network")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
