@@ -2,6 +2,7 @@ import os
 import re
 import datetime
 import logging
+import threading
 import skimage
 import numpy as np
 import keras
@@ -12,6 +13,17 @@ from keras.applications.resnet50 import ResNet50
 
 
 def load_image(dataset, config, image_id, augmentation=None):
+    """Load image and class.
+
+    dataset: The Dataset object to pick data from
+    config: The model config object
+    image_id: ID of the image to load
+    augmentation: An imgaug (https://github.com/aleju/imgaug) augmentation (Optional)
+    
+    Returns:
+    image: [height, width, 3]
+    class_ids: Integer class ID
+    """
     # Load image
     image = dataset.load_image(image_id)
     image = skimage.transform.resize(image, config.INPUT_SHAPE, 
@@ -43,7 +55,45 @@ def load_image(dataset, config, image_id, augmentation=None):
     return image, class_id
 
 
+class threadsafe_iter:
+    """Takes an iterator/generator and makes it thread-safe by
+    serializing call to the `next` method of given iterator/generator.
+    """
+    def __init__(self, it):
+        self.it = it
+        self.lock = threading.Lock()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        with self.lock:
+            return next(self.it)
+
+
+def threadsafe_generator(f):
+    """A decorator that takes a generator function and makes it thread-safe.
+    """
+    def g(*a, **kw):
+        return threadsafe_iter(f(*a, **kw))
+    return g
+
+
+@threadsafe_generator
 def data_generator(dataset, config, shuffle=True, augmentation=None, batch_size=1):
+    """A generator that returns images and corresponding target class ids.
+
+    dataset: The Dataset object to pick data from
+    config: The model config object
+    augmentation: An imgaug (https://github.com/aleju/imgaug) augmentation (Optional)
+    batch_size: Number of images to use in each call
+
+    Returns:
+    inputs: lists containing images
+    - images : [batch, H, W, C]
+    outputs: lists containing corresponding target class ids
+    - class_ids : Integer class IDs
+    """
     b = 0  # batch item index
     image_index = -1
     image_ids = np.copy(dataset.image_ids)
@@ -99,6 +149,10 @@ class Model():
         self.set_log_dir()
     
     def build(self, config):
+        """Build ResNet50 architecture.
+        
+        config: The model config object
+        """
         base_model = ResNet50(weights='imagenet', include_top=False, input_shape=config.INPUT_SHAPE)
         x = base_model.output
         x = KL.Flatten()(x)
@@ -110,6 +164,15 @@ class Model():
     
     def train(self, train_dataset, val_dataset, learning_rate, epochs,
                 augmentation=None, custom_callbacks=None):
+        """Train the model.
+
+        train_dataset, val_dataset: Training and validation Dataset objects.
+        learning_rate: The learning rate to train with
+        epochs: Number of training epochs.
+        augmentation: An imgaug (https://github.com/aleju/imgaug) augmentation (Optional)
+        custom_callbacks: list of type keras.callbacks to be called
+	        with the keras fit_generator method (Optional)
+        """
         train_generator = data_generator(train_dataset, self.config, shuffle=True,
                                          augmentation=augmentation,
                                          batch_size=self.config.BATCH_SIZE)
@@ -153,8 +216,9 @@ class Model():
     def find_last(self):
         """Finds the last checkpoint file of the last trained model in the
         model directory.
+
         Returns:
-            The path of the last checkpoint file
+        checkpoint: The path of the last checkpoint file
         """
         # Get directory names. Each directory corresponds to a model
         dir_names = next(os.walk(self.model_dir))[1]
@@ -180,6 +244,10 @@ class Model():
         return checkpoint
 
     def load_model(self, filepath):
+        """Load pre-trained model from file
+
+        filepath: path to pre-trained model file
+        """
         self.model = KM.load_model(filepath)
         
         # Update the log directory
@@ -187,6 +255,8 @@ class Model():
 
     def set_log_dir(self, model_path=None):
         """Sets the model log directory and epoch counter.
+
+        model_path: path to last checkpoint (Optional)
         """
         # Set date and epoch counter as if starting a new model
         self.epoch = 0

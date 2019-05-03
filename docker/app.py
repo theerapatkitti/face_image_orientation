@@ -51,7 +51,7 @@ def make_prediction(image):
     orientation: Predicted orientation of the image
     """
     predictions = model.predict(image)[0]
-    classes = (0, 180, 270, 90)
+    classes = (0, 90, 180, 270)
     scores = list(zip(classes, predictions))
     orientation = classes[np.argmax(predictions)]
     return scores, orientation
@@ -82,7 +82,7 @@ def predict():
         if flask.request.files.get("image"):
             image = flask.request.files["image"].read()
             image = Image.open(io.BytesIO(image))
-            molded_image = prepare_image(image, target=(150, 150))
+            molded_image = prepare_image(image, target=(224, 224))
             scores, orientation = make_prediction(molded_image)
             data["prediction"] = {}
             data['prediction']['orientation'] = orientation
@@ -104,7 +104,7 @@ def correct():
         if flask.request.files.get("image"):
             image = flask.request.files["image"].read()
             image = Image.open(io.BytesIO(image))
-            molded_image = prepare_image(image, target=(150, 150))
+            molded_image = prepare_image(image, target=(224, 224))
             _, orientation = make_prediction(molded_image)
             image = rotate_image(image, orientation)
             mimetype = flask.request.files["image"].content_type

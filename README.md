@@ -17,6 +17,36 @@ Install python modules
 pip install -r requirements.txt
 ```
 
+## Training
+
+A pre-trained model is provided from the [releases page](https://github.com/theerapatkitti/face_image_orientation/releases). Training and evaluation code is in [face_orientation.py](face_orientation.py). The module can be ran directly from command line:
+
+```
+# Train a new model
+python3 face_orientation.py train --dataset=/path/to/dataset/ --logs=logs
+
+# Continue training a model that you had trained earlier
+python3 face_orientation.py train --dataset=/path/to/dataset/ --logs=logs --model=/path/to/model.h5
+
+# Continue training the last model you trained
+python3 face_orientation.py train --dataset=/path/to/dataset/ --logs=logs --model=last
+```
+
+The training learning rate and other parameters should be set in face_orientation.
+
+## Evaluation
+
+Evaluation code can be ran by using:
+
+```
+# Run evaluation on the specified model
+python3 face_orientation.py evaluate --dataset=/path/to/dataset/ --logs=logs --model=/path/to/model.h5
+```
+
+## Dataset
+
+[Labeled Faces in the Wild](http://vis-www.cs.umass.edu/lfw/) is used as a dataset to train the model.
+
 ## API
 
 There are two APIs available: orientation classification and orientation correction. Both APIs support JPEG, PNG, BMP.
@@ -135,7 +165,7 @@ To deploy the API, a docker image is created.
 ```
 cd docker
 
-sudo docker build -t ml-api:latest .
+sudo docker build -t face-orientation-api:latest .
 ```
 
 Then the docker container is uploaded to Docker Hub for Kubernetes to install.
@@ -163,3 +193,18 @@ kubectl expose deployment <app name> --type=LoadBalancer --port 80 --target-port
 * [Flask](http://flask.pocoo.org/)
 * [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/docs/)
 
+## Citation
+
+[Labeled Faces in the Wild](http://vis-www.cs.umass.edu/lfw/)
+
+```
+@TechReport{LFWTech,
+  author =       {Gary B. Huang and Manu Ramesh and Tamara Berg and 
+                  Erik Learned-Miller},
+  title =        {Labeled Faces in the Wild: A Database for Studying 
+                  Face Recognition in Unconstrained Environments},
+  institution =  {University of Massachusetts, Amherst},
+  year =         2007,
+  number =       {07-49},
+  month =        {October}}
+```
