@@ -1,6 +1,9 @@
 import os
 import sys
+import time
 import imgaug
+import skimage
+import numpy as np
 from utils.dataset import Dataset
 from utils.model import Model
 
@@ -11,6 +14,47 @@ class Config():
     BATCH_SIZE = 32
     MAX_EPOCH = 10
     LEARNING_RATE = 0.001
+
+
+def evaluate(model, dataset, limit=0):
+    """Runs evaluation.
+
+    model: model to evaluate
+    dataset: Dataset object with valiadtion data
+    limit: number of images to use for evaluation
+    """
+    # Pick images from the dataset
+    image_ids = dataset.image_ids
+
+    # Limit to a subset
+    if limit:
+        image_ids = image_ids[:limit]
+
+    t_prediction = 0
+    t_start = time.time()
+    acc = 0
+
+    results = []
+    for i, image_id in enumerate(image_ids):
+        # Load image
+        image = dataset.load_image(image_id)
+        image = skimage.transform.resize(image, config.INPUT_SHAPE, 
+                                        mode="constant", anti_aliasing=True)
+        class_id = dataset.image_info[image_id]["class"]
+        image = skimage.transform.rotate(image, dataset.class_info[class_id]["name"])
+
+        # Run prediction
+        t = time.time()
+        r = model.predict(np.expand_dims(image, axis=0))[0]
+        t_prediction += (time.time() - t)
+
+        acc += np.argmax(r) == class_id
+
+    print("Prediction time: {}. Average {}/image".format(
+        t_prediction, t_prediction / len(image_ids)))
+    print("Total time: ", time.time() - t_start)
+    print("Accuracy: ", acc / len(image_ids))
+
 
 if __name__ == "__main__":
     import argparse
@@ -43,9 +87,6 @@ if __name__ == "__main__":
     config = Config()
     model = Model(config=config, model_dir=args.logs)
 
-    if args.command == "train":
-        model.build(config)
-
     if args.model:
         # Select weights file to load
         if args.model.lower() == "last":
@@ -55,6 +96,9 @@ if __name__ == "__main__":
             model_path = args.model
     
         model.load_model(model_path)
+
+    elif args.command == "train":
+        model.build(config)
     
     model.model.summary()
 
@@ -87,8 +131,11 @@ if __name__ == "__main__":
     elif args.command == "evaluate":
         # Validation dataset
         dataset_val = Dataset()
+        dataset_val.load_dataset(args.dataset, "val")
+        dataset_val.prepare()
         print("Running evaluation on {} images.".format(args.limit))
-        # evaluate_coco(model, dataset_val, coco, "bbox", limit=int(args.limit))
+        evaluate(model, dataset_val, limit=int(args.limit))
+
     else:
         print("'{}' is not recognized. "
               "Use 'train' or 'evaluate'".format(args.command))

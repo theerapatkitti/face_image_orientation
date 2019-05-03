@@ -213,6 +213,13 @@ class Model():
         )
         self.epoch = max(self.epoch, epochs)
 
+    def predict(self, image):
+        """Make prediction
+
+        image: image to predict
+        """
+        return self.model.predict(image)
+
     def find_last(self):
         """Finds the last checkpoint file of the last trained model in the
         model directory.
@@ -222,8 +229,7 @@ class Model():
         """
         # Get directory names. Each directory corresponds to a model
         dir_names = next(os.walk(self.model_dir))[1]
-        key = self.config.NAME.lower()
-        dir_names = filter(lambda f: f.startswith(key), dir_names)
+        dir_names = filter(lambda f: f.startswith("model"), dir_names)
         dir_names = sorted(dir_names)
         if not dir_names:
             import errno
