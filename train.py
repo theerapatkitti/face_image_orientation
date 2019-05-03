@@ -57,6 +57,8 @@ if __name__ == "__main__":
     
         model.load_model(model_path)
     
+    model.model.summary()
+
      # Train or evaluate
     if args.command == "train":
         # Training dataset. Use the training set and 35K from the
