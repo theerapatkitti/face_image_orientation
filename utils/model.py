@@ -3,7 +3,6 @@ import re
 import datetime
 import logging
 import skimage
-import multiprocessing
 import numpy as np
 import keras
 import keras.layers as KL
@@ -100,35 +99,12 @@ class Model():
         self.set_log_dir()
     
     def build(self, config):
-        if config.MODEL == "ResNet50":
-            base_model = ResNet50(weights='imagenet', include_top=False, input_shape=config.INPUT_SHAPE)
-            x = base_model.output
-            x = KL.Flatten()(x)
-            final_output = KL.Dense(config.NUM_CLASSES, activation='softmax', name='rotation')(x)
+        base_model = ResNet50(weights='imagenet', include_top=False, input_shape=config.INPUT_SHAPE)
+        x = base_model.output
+        x = KL.Flatten()(x)
+        final_output = KL.Dense(config.NUM_CLASSES, activation='softmax', name='rotation')(x)
 
-            # create the new model
-            model = KM.Model(inputs=base_model.input, outputs=final_output)
-
-        else:
-            model = KM.Sequential()
-
-            model.add(KL.Conv2D(32, (3, 3), activation='relu',
-                            input_shape=config.INPUT_SHAPE))
-            model.add(KL.MaxPooling2D((2, 2)))
-
-            model.add(KL.Conv2D(64, (3, 3), activation='relu'))
-            model.add(KL.MaxPooling2D((2, 2)))
-
-            model.add(KL.Conv2D(128, (3, 3), activation='relu'))
-            model.add(KL.MaxPooling2D((2, 2)))
-
-            model.add(KL.Conv2D(128, (3, 3), activation='relu'))
-            model.add(KL.MaxPooling2D((2, 2)))
-
-            model.add(KL.Flatten())
-            model.add(KL.Dropout(0.5))
-            model.add(KL.Dense(512, activation='relu'))
-            model.add(KL.Dense(config.NUM_CLASSES, activation='softmax', name='rotation'))
+        model = KM.Model(inputs=base_model.input, outputs=final_output)
         
         self.model = model
     
@@ -161,14 +137,6 @@ class Model():
             metrics=['acc']
         )
 
-        # Work-around for Windows: Keras fails on Windows when using
-        # multiprocessing workers. See discussion here:
-        # https://github.com/matterport/Mask_RCNN/issues/13#issuecomment-353124009
-        if os.name is 'nt':
-            workers = 0
-        else:
-            workers = multiprocessing.cpu_count()
-
         self.model.fit_generator(
             train_generator,
             initial_epoch=self.epoch,
@@ -178,9 +146,7 @@ class Model():
             callbacks=callbacks,
             validation_data=val_generator,
             validation_steps=val_dataset.num_images / self.config.BATCH_SIZE,
-            max_queue_size=100,
-            workers=workers,
-            use_multiprocessing=True,
+            workers=10,
         )
         self.epoch = max(self.epoch, epochs)
 

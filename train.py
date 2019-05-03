@@ -11,7 +11,6 @@ class Config():
     BATCH_SIZE = 32
     MAX_EPOCH = 10
     LEARNING_RATE = 0.001
-    MODEL = "ResNet50"
 
 if __name__ == "__main__":
     import argparse
